@@ -14,6 +14,7 @@ class NotesService {
           .map((noteStr) => Note.fromJson(json.decode(noteStr) as Map<String, dynamic>))
           .toList();
     } catch (e) {
+      // Return empty list on error to gracefully handle corrupted data
       return [];
     }
   }
@@ -37,6 +38,7 @@ class NotesService {
       notes[index] = updatedNote;
       await saveNotes(notes);
     }
+    // Silently ignore if note not found (defensive programming)
   }
 
   Future<void> deleteNote(String id) async {
