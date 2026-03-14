@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 import '../models/note.dart';
 import '../services/notes_storage_service.dart';
@@ -32,6 +33,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
   late List<String> _tags;
   List<String> _suggestedTags = const [];
   String _selectedColor = '#FFFFFF';
+  bool _isPreview = false;
 
   bool get _isEditing => widget.note != null;
 
@@ -68,7 +70,8 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     setState(() {
       _tags = [..._tags, tag];
       _tagController.clear();
-      _suggestedTags = _suggestedTags.where((existing) => existing != tag).toList();
+      _suggestedTags =
+          _suggestedTags.where((existing) => existing != tag).toList();
     });
   }
 
@@ -114,10 +117,26 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final markdownStyle =
+        MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+      h1: Theme.of(context).textTheme.headlineMedium,
+      h2: Theme.of(context).textTheme.headlineSmall,
+      p: Theme.of(context).textTheme.bodyLarge,
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Note' : 'Add Note'),
         actions: [
+          IconButton(
+            onPressed: () {
+              setState(() {
+                _isPreview = !_isPreview;
+              });
+            },
+            icon: Icon(_isPreview ? Icons.edit : Icons.visibility),
+            tooltip: _isPreview ? 'Switch to edit' : 'Preview markdown',
+          ),
           IconButton(
             onPressed: _saveNote,
             icon: const Icon(Icons.check),
@@ -194,7 +213,6 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                   ),
                 ),
               ],
-
               const SizedBox(height: 12),
               Align(
                 alignment: Alignment.centerLeft,
@@ -210,7 +228,8 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                   spacing: 8,
                   runSpacing: 8,
                   children: _noteColors.map((hex) {
-                    final color = Color(int.parse(hex.replaceFirst('#', 'FF'), radix: 16));
+                    final color =
+                        Color(int.parse(hex.replaceFirst('#', 'FF'), radix: 16));
                     final isSelected = _selectedColor == hex;
                     return GestureDetector(
                       onTap: () {
@@ -236,26 +255,47 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                   }).toList(),
                 ),
               ),
-
               const SizedBox(height: 12),
               Expanded(
-                child: TextFormField(
-                  controller: _contentController,
-                  decoration: const InputDecoration(
-                    labelText: 'Content',
-                    border: OutlineInputBorder(),
-                    alignLabelWithHint: true,
-                  ),
-                  maxLines: null,
-                  expands: true,
-                  textAlignVertical: TextAlignVertical.top,
-                  validator: (value) {
-                    if ((value ?? '').trim().isEmpty) {
-                      return 'Content cannot be empty';
-                    }
-                    return null;
-                  },
-                ),
+                child: _isPreview
+                    ? Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outline
+                                .withOpacity(0.5),
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Markdown(
+                          data: _contentController.text,
+                          selectable: true,
+                          shrinkWrap: true,
+                          styleSheet: markdownStyle,
+                          padding: const EdgeInsets.all(12),
+                        ),
+                      )
+                    : TextFormField(
+                        controller: _contentController,
+                        decoration: const InputDecoration(
+                          labelText: 'Content',
+                          border: OutlineInputBorder(),
+                          alignLabelWithHint: true,
+                          helperText:
+                              'Markdown supported: # Header  **Bold**  - List  `Code`',
+                        ),
+                        maxLines: null,
+                        expands: true,
+                        textAlignVertical: TextAlignVertical.top,
+                        validator: (value) {
+                          if ((value ?? '').trim().isEmpty) {
+                            return 'Content cannot be empty';
+                          }
+                          return null;
+                        },
+                      ),
               ),
               const SizedBox(height: 12),
               SizedBox(
