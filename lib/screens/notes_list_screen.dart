@@ -22,6 +22,14 @@ class NotesListScreen extends StatefulWidget {
 
 class _NotesListScreenState extends State<NotesListScreen> {
   static const String _allTagsKey = '__all__';
+  static const List<String> _noteColors = [
+    '#FFFFFF',
+    '#FFF59D',
+    '#C8E6C9',
+    '#BBDEFB',
+    '#E1BEE7',
+    '#FFCDD2',
+  ];
 
   String _query = '';
   String _activeTag = _allTagsKey;
@@ -93,6 +101,55 @@ class _NotesListScreenState extends State<NotesListScreen> {
     }
 
     return false;
+  }
+
+
+  Future<void> _showColorPicker(Note note, NotesStorageService storageService) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: _noteColors.map((hex) {
+              final color =
+                  Color(int.parse(hex.replaceFirst('#', 'FF'), radix: 16));
+              final isSelected = (note.metadata?['color'] as String?) == hex;
+
+              return GestureDetector(
+                onTap: () async {
+                  final updated = note.withColor(hex).copyWith(
+                        updatedAt: DateTime.now(),
+                      );
+                  await storageService.saveNote(updated);
+                  if (!mounted) {
+                    return;
+                  }
+                  Navigator.pop(context);
+                  _showMessage('Note color updated');
+                },
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.onSurface
+                          : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
   }
 
   String _sortLabel(NoteSortOption option) {
@@ -380,6 +437,8 @@ class _NotesListScreenState extends State<NotesListScreen> {
                                       ),
                                     );
                                   },
+                                  onLongPress: () =>
+                                      _showColorPicker(note, storageService),
                                   trailing: IconButton(
                                     icon: const Icon(Icons.delete_outline),
                                     onPressed: () async {
