@@ -1,74 +1,46 @@
-# Notes App
+# Notes-app
 
-A simple and elegant notes management app built with Flutter.
+A notes app built with Flutter, developed level-by-level from MVP to advanced features.
 
-## Features
+## Current Progress
 
-- ✨ Create, edit, and delete notes
-- 💾 Local storage using SharedPreferences
-- 📝 Clean and intuitive user interface
-- 🕒 Timestamps for note creation and updates
-- 📱 Material Design 3 UI
+### ✅ Level 3 — Step 5 (Quick Color Change + Attachments)
 
-## Getting Started
+Implemented:
+- Material 3 app shell
+- Hive local storage bootstrap
+- Note model (`id`, `title`, `content`, `createdAt`, `updatedAt`, `isPinned`, `tags`, `metadata`)
+- Notes list bound to Hive via `ValueListenableBuilder` for live reactive updates
+- Create note flow
+- Edit existing note flow
+- Delete note from list
+- Live search by title and content
+- Pin/unpin interaction from notes list
+- Swipe actions: right to pin/unpin, left to delete
+- Sorting controls: recent, oldest, title (+ pinned-first toggle)
+- Theme mode selector: System / Light / Dark
+- Theme preference persisted locally in Hive settings box
+- Add/edit tags on note form
+- Tag suggestions from existing notes
+- Tag filtering chips in notes list
+- Note colors stored in metadata and editable from note form
+- Colorized note cards in notes list
+- Quick color change from notes list (long press)
+- Markdown edit/preview toggle in note editor
+- Markdown rendering preview with Material 3 typography
+- Image attachments stored as local file paths in metadata
+- Attachment picker and thumbnail previews in editor
+- Pinned-first sorting logic
+- Empty state widget for no-notes UX
+- Clean architecture structure:
+  - `lib/models`
+  - `lib/screens`
+  - `lib/services`
+  - `lib/widgets`
 
-### Prerequisites
+## Next Step
 
-- Flutter SDK (>=3.0.0)
-- Dart SDK
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/nakulb79/Notes-app.git
-cd Notes-app
-```
-
-2. Install dependencies:
-```bash
-flutter pub get
-```
-
-3. Run the app:
-```bash
-flutter run
-```
-
-## Running Tests
-
-To run the tests:
-```bash
-flutter test
-```
-
-## Project Structure
-
-```
-lib/
-├── main.dart                 # App entry point
-├── models/
-│   └── note.dart            # Note data model
-├── screens/
-│   ├── notes_list_screen.dart    # Home screen with notes list
-│   └── note_editor_screen.dart   # Screen for creating/editing notes
-└── services/
-    └── notes_service.dart   # Service for managing note storage
-```
-
-## Usage
-
-1. **Create a Note**: Tap the "+" floating action button
-2. **Edit a Note**: Tap on any note in the list
-3. **Delete a Note**: Tap the delete icon on any note
-4. **Save a Note**: Tap the checkmark icon in the editor
-
-## Technologies Used
-
-- **Flutter**: Cross-platform UI framework
-- **SharedPreferences**: Local data persistence
-- **Material Design 3**: Modern UI components
-
-## License
-
-This project is open source and available under the MIT License.
+Level 3 next steps:
+- Markdown quick-format toolbar
+- Camera capture for attachments
+- Attachment reorder and captions
