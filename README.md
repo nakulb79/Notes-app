@@ -4,7 +4,7 @@ A notes app built with Flutter, developed level-by-level from MVP to advanced fe
 
 ## Current Progress
 
-### ✅ Level 3 — Step 3 (Always-on Markdown Preview)
+### ✅ Level 3 — Step 4 (Image Attachments + Markdown)
 
 Implemented:
 - Material 3 app shell
@@ -27,6 +27,8 @@ Implemented:
 - Colorized note cards in notes list
 - Markdown edit/preview toggle in note editor
 - Markdown rendering preview with Material 3 typography
+- Image attachments stored as local file paths in metadata
+- Attachment picker and thumbnail previews in editor
 - Pinned-first sorting logic
 - Empty state widget for no-notes UX
 - Clean architecture structure:
@@ -38,6 +40,6 @@ Implemented:
 ## Next Step
 
 Level 3 next steps:
-- Attachments/images
 - Quick color change from note list
 - Markdown quick-format toolbar
+- Camera capture for attachments

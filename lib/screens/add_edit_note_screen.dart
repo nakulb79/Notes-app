@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/note.dart';
 import '../services/notes_storage_service.dart';
@@ -29,8 +32,10 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
   final _contentController = TextEditingController();
   final _tagController = TextEditingController();
   final _storageService = NotesStorageService();
+  final _imagePicker = ImagePicker();
 
   late List<String> _tags;
+  late List<String> _attachments;
   List<String> _suggestedTags = const [];
   String _selectedColor = '#FFFFFF';
   bool _isPreview = false;
@@ -42,6 +47,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     super.initState();
     final note = widget.note;
     _tags = List<String>.from(note?.tags ?? const []);
+    _attachments = List<String>.from(note?.getAttachments() ?? const []);
     if (note != null) {
       _titleController.text = note.title;
       _contentController.text = note.content;
@@ -82,6 +88,27 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     _refreshSuggestions();
   }
 
+  Future<void> _addImage() async {
+    final picked = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (picked == null) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      if (!_attachments.contains(picked.path)) {
+        _attachments = [..._attachments, picked.path];
+      }
+    });
+  }
+
+  void _removeAttachment(String path) {
+    setState(() {
+      _attachments = _attachments.where((item) => item != path).toList();
+    });
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -97,6 +124,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
 
     final now = DateTime.now();
     final existing = widget.note;
+
     final note = Note(
       id: existing?.id ?? now.microsecondsSinceEpoch.toString(),
       title: _titleController.text.trim(),
@@ -105,14 +133,65 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
       updatedAt: now,
       isPinned: existing?.isPinned ?? false,
       tags: _tags,
-      metadata: <String, dynamic>{...?existing?.metadata, 'color': _selectedColor},
-    );
+      metadata: <String, dynamic>{...?existing?.metadata},
+    ).withColor(_selectedColor).withAttachments(_attachments);
 
     await _storageService.saveNote(note);
     if (!mounted) {
       return;
     }
     Navigator.of(context).pop();
+  }
+
+  Widget _buildAttachments() {
+    if (_attachments.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: _attachments.map((path) {
+          return Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  File(path),
+                  width: 90,
+                  height: 90,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 90,
+                    height: 90,
+                    color: Colors.black12,
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.broken_image),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                top: 0,
+                child: GestureDetector(
+                  onTap: () => _removeAttachment(path),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.black54,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(2),
+                    child: const Icon(Icons.close, size: 14, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }).toList(),
+      ),
+    );
   }
 
   @override
@@ -256,6 +335,24 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Attachments',
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildAttachments(),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _addImage,
+                  icon: const Icon(Icons.image_outlined),
+                  label: const Text('Add image'),
+                ),
+              ),
+              const SizedBox(height: 12),
               Expanded(
                 child: _isPreview
                     ? Container(
@@ -269,12 +366,24 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                           ),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Markdown(
-                          data: _contentController.text,
-                          selectable: true,
-                          shrinkWrap: true,
-                          styleSheet: markdownStyle,
+                        child: ListView(
                           padding: const EdgeInsets.all(12),
+                          children: [
+                            MarkdownBody(
+                              data: _contentController.text,
+                              selectable: true,
+                              styleSheet: markdownStyle,
+                            ),
+                            if (_attachments.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              Text(
+                                'Attachments',
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
+                              const SizedBox(height: 8),
+                              _buildAttachments(),
+                            ],
+                          ],
                         ),
                       )
                     : TextFormField(

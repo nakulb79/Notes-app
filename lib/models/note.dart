@@ -43,6 +43,22 @@ class Note {
     return copyWith(metadata: nextMetadata);
   }
 
+
+
+  List<String> getAttachments() {
+    final raw = metadata?['attachments'];
+    if (raw is! List) {
+      return const [];
+    }
+    return List<String>.from(raw.map((item) => item.toString()));
+  }
+
+  Note withAttachments(List<String> attachments) {
+    final nextMetadata = <String, dynamic>{...?metadata};
+    nextMetadata['attachments'] = attachments;
+    return copyWith(metadata: nextMetadata);
+  }
+
   Note copyWith({
     String? id,
     String? title,
