@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../models/note.dart';
 import '../services/notes_storage_service.dart';
+import '../widgets/markdown_toolbar.dart';
 import '../widgets/tag_chip.dart';
 
 class AddEditNoteScreen extends StatefulWidget {
@@ -107,6 +108,36 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     setState(() {
       _attachments = _attachments.where((item) => item != path).toList();
     });
+  }
+
+
+  void _insertMarkdown(String prefix, {String suffix = ''}) {
+    final value = _contentController.value;
+    final start = value.selection.start;
+    final end = value.selection.end;
+
+    if (start < 0 || end < 0) {
+      final appended = value.text + prefix + suffix;
+      _contentController.value = value.copyWith(
+        text: appended,
+        selection: TextSelection.collapsed(
+          offset: appended.length - suffix.length,
+        ),
+      );
+      return;
+    }
+
+    final selectedText = value.text.substring(start, end);
+    final replacement = '$prefix$selectedText$suffix';
+    final newText = value.text.replaceRange(start, end, replacement);
+    final cursorOffset = selectedText.isEmpty
+        ? start + prefix.length
+        : start + replacement.length;
+
+    _contentController.value = value.copyWith(
+      text: newText,
+      selection: TextSelection.collapsed(offset: cursorOffset),
+    );
   }
 
   @override
@@ -386,24 +417,37 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                           ],
                         ),
                       )
-                    : TextFormField(
-                        controller: _contentController,
-                        decoration: const InputDecoration(
-                          labelText: 'Content',
-                          border: OutlineInputBorder(),
-                          alignLabelWithHint: true,
-                          helperText:
-                              'Markdown supported: # Header  **Bold**  - List  `Code`',
-                        ),
-                        maxLines: null,
-                        expands: true,
-                        textAlignVertical: TextAlignVertical.top,
-                        validator: (value) {
-                          if ((value ?? '').trim().isEmpty) {
-                            return 'Content cannot be empty';
-                          }
-                          return null;
-                        },
+                    : Column(
+                        children: [
+                          MarkdownToolbar(
+                            onBold: () => _insertMarkdown('**', suffix: '**'),
+                            onItalic: () => _insertMarkdown('_', suffix: '_'),
+                            onCode: () => _insertMarkdown('`', suffix: '`'),
+                            onList: () => _insertMarkdown('- '),
+                            onHeading: () => _insertMarkdown('# '),
+                          ),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _contentController,
+                              decoration: const InputDecoration(
+                                labelText: 'Content',
+                                border: OutlineInputBorder(),
+                                alignLabelWithHint: true,
+                                helperText:
+                                    'Markdown supported: # Header  **Bold**  - List  `Code`',
+                              ),
+                              maxLines: null,
+                              expands: true,
+                              textAlignVertical: TextAlignVertical.top,
+                              validator: (value) {
+                                if ((value ?? '').trim().isEmpty) {
+                                  return 'Content cannot be empty';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
                       ),
               ),
               const SizedBox(height: 12),

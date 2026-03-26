@@ -4,7 +4,7 @@ A notes app built with Flutter, developed level-by-level from MVP to advanced fe
 
 ## Current Progress
 
-### ✅ Level 3 — Step 5 (Quick Color Change + Attachments)
+### ✅ Level 3 — Step 6 (Markdown Toolbar + Quick Actions)
 
 Implemented:
 - Material 3 app shell
@@ -28,6 +28,8 @@ Implemented:
 - Quick color change from notes list (long press)
 - Markdown edit/preview toggle in note editor
 - Markdown rendering preview with Material 3 typography
+- Markdown quick-format toolbar (bold, italic, code, list, heading)
+- Reusable markdown toolbar widget with formatting actions
 - Image attachments stored as local file paths in metadata
 - Attachment picker and thumbnail previews in editor
 - Pinned-first sorting logic
@@ -41,6 +43,6 @@ Implemented:
 ## Next Step
 
 Level 3 next steps:
-- Markdown quick-format toolbar
 - Camera capture for attachments
 - Attachment reorder and captions
+- Markdown shortcuts customization
