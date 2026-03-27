@@ -4,7 +4,7 @@ A notes app built with Flutter, developed level-by-level from MVP to advanced fe
 
 ## Current Progress
 
-### ✅ Level 3 — Step 6 (Markdown Toolbar + Quick Actions)
+### ✅ Level 3 — Step 7 (Camera Capture + Editor Polish)
 
 Implemented:
 - Material 3 app shell
@@ -32,6 +32,7 @@ Implemented:
 - Reusable markdown toolbar widget with formatting actions
 - Image attachments stored as local file paths in metadata
 - Attachment picker and thumbnail previews in editor
+- Camera capture option for attachments via source picker
 - Pinned-first sorting logic
 - Empty state widget for no-notes UX
 - Clean architecture structure:
@@ -43,6 +44,6 @@ Implemented:
 ## Next Step
 
 Level 3 next steps:
-- Camera capture for attachments
 - Attachment reorder and captions
 - Markdown shortcuts customization
+- Slash commands for markdown

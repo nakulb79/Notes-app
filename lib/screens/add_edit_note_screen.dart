@@ -89,8 +89,8 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     _refreshSuggestions();
   }
 
-  Future<void> _addImage() async {
-    final picked = await _imagePicker.pickImage(source: ImageSource.gallery);
+  Future<void> _addImage(ImageSource source) async {
+    final picked = await _imagePicker.pickImage(source: source);
     if (picked == null) {
       return;
     }
@@ -102,6 +102,37 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
         _attachments = [..._attachments, picked.path];
       }
     });
+  }
+
+  Future<void> _showImageSourcePicker() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (_) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Gallery'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _addImage(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: const Text('Camera'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _addImage(ImageSource.camera);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _removeAttachment(String path) {
@@ -174,7 +205,42 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     Navigator.of(context).pop();
   }
 
-  Widget _buildAttachments() {
+  Future<void> _showAttachmentPreview(String path) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(16),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: InteractiveViewer(
+                  child: Image.file(
+                    File(path),
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Center(
+                      child: Icon(Icons.broken_image, size: 48),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  tooltip: 'Close',
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAttachments({bool editable = true}) {
     if (_attachments.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -187,37 +253,41 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
         children: _attachments.map((path) {
           return Stack(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  File(path),
-                  width: 90,
-                  height: 90,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+              GestureDetector(
+                onTap: () => _showAttachmentPreview(path),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    File(path),
                     width: 90,
                     height: 90,
-                    color: Colors.black12,
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.broken_image),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: GestureDetector(
-                  onTap: () => _removeAttachment(path),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.black54,
-                      shape: BoxShape.circle,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 90,
+                      height: 90,
+                      color: Colors.black12,
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.broken_image),
                     ),
-                    padding: const EdgeInsets.all(2),
-                    child: const Icon(Icons.close, size: 14, color: Colors.white),
                   ),
                 ),
               ),
+              if (editable)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: GestureDetector(
+                    onTap: () => _removeAttachment(path),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(2),
+                      child: const Icon(Icons.close, size: 14, color: Colors.white),
+                    ),
+                  ),
+                ),
             ],
           );
         }).toList(),
@@ -378,7 +448,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(
-                  onPressed: _addImage,
+                  onPressed: _showImageSourcePicker,
                   icon: const Icon(Icons.image_outlined),
                   label: const Text('Add image'),
                 ),
@@ -412,7 +482,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                                 style: Theme.of(context).textTheme.titleSmall,
                               ),
                               const SizedBox(height: 8),
-                              _buildAttachments(),
+                              _buildAttachments(editable: false),
                             ],
                           ],
                         ),
