@@ -205,39 +205,81 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     Navigator.of(context).pop();
   }
 
-  Future<void> _showAttachmentPreview(String path) async {
+  Future<void> _showAttachmentPreview(int initialIndex) async {
+    final boundedInitialIndex = initialIndex.clamp(0, _attachments.length - 1);
+    final pageController = PageController(initialPage: boundedInitialIndex);
+
     await showDialog<void>(
       context: context,
       builder: (_) {
-        return Dialog(
-          insetPadding: const EdgeInsets.all(16),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: InteractiveViewer(
-                  child: Image.file(
-                    File(path),
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Center(
-                      child: Icon(Icons.broken_image, size: 48),
+        var currentIndex = boundedInitialIndex;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              insetPadding: const EdgeInsets.all(16),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: PageView.builder(
+                      controller: pageController,
+                      itemCount: _attachments.length,
+                      onPageChanged: (index) {
+                        setDialogState(() {
+                          currentIndex = index;
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        final path = _attachments[index];
+                        return InteractiveViewer(
+                          child: Image.file(
+                            File(path),
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => const Center(
+                              child: Icon(Icons.broken_image, size: 48),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: IconButton(
+                      icon: const Icon(Icons.close),
+                      tooltip: 'Close',
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 12,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${currentIndex + 1} / ${_attachments.length}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: IconButton(
-                  icon: const Icon(Icons.close),
-                  tooltip: 'Close',
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
+    pageController.dispose();
   }
 
   Widget _buildAttachments({bool editable = true}) {
@@ -250,11 +292,13 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
-        children: _attachments.map((path) {
+        children: _attachments.asMap().entries.map((entry) {
+          final index = entry.key;
+          final path = entry.value;
           return Stack(
             children: [
               GestureDetector(
-                onTap: () => _showAttachmentPreview(path),
+                onTap: () => _showAttachmentPreview(index),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.file(
